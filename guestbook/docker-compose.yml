@@ -1,0 +1,33 @@
+services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: dbuser
+      POSTGRES_PASSWORD: dbpassword
+      POSTGRES_DB: dbname
+    volumes:
+      - dbdata:/var/lib/postgresql/data
+      - ./db/database.sql:/docker-entrypoint-initdb.d/database.sql:ro
+
+  backend:
+    build: ./backend
+    environment:
+      DBHOST: db
+      DBUSER: dbuser
+      DBPASSWORD: dbpassword
+      DBDATABASE: dbname
+      DBPORT: 5432
+    depends_on:
+      - db
+    ports:
+      - "5000:5000"
+
+  frontend:
+    image: nginx:alpine
+    ports:
+      - "8080:80"
+    volumes:
+      - ./frontend:/usr/share/nginx/html:ro
+
+volumes:
+  dbdata:

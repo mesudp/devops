@@ -1,0 +1,96 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Guestbook</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 760px; margin: 40px auto; }
+    input, textarea { width: 100%; padding: 10px; margin: 8px 0; }
+    button { padding: 10px 14px; cursor: pointer; }
+    .entry { border: 1px solid #ddd; border-radius: 10px; padding: 12px; margin: 10px 0; }
+    .meta { color: #666; font-size: 0.9em; margin-bottom: 6px; }
+    .status { margin-top: 10px; color: #444; }
+  </style>
+</head>
+<body>
+  <h1>Guestbook ✍️</h1>
+
+  <form id="form">
+    <label>Name</label>
+    <input id="name" placeholder="Your name" required />
+
+    <label>Message</label>
+    <textarea id="message" rows="4" placeholder="Write something..." required></textarea>
+
+    <button type="submit">Post</button>
+    <button type="button" id="refresh">Refresh</button>
+
+    <div class="status" id="status">Ready</div>
+  </form>
+
+  <h2>Entries</h2>
+  <div id="entries"></div>
+
+  <script>
+    // No reverse proxy: browser talks to backend via published port
+    const API = "http://localhost:5000/api";
+
+    const statusEl = document.getElementById("status");
+    const entriesEl = document.getElementById("entries");
+
+    function setStatus(msg) { statusEl.textContent = msg; }
+
+    function escapeHtml(s) {
+      return s.replace(/[&<>"']/g, c => ({
+        "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+      }[c]));
+    }
+
+    async function loadEntries() {
+      setStatus("Loading entries...");
+      const res = await fetch(`${API}/entries`);
+      const data = await res.json();
+
+      entriesEl.innerHTML = data.map(e => {
+        const date = new Date(e.created_at).toLocaleString();
+        return `
+          <div class="entry">
+            <div class="meta"><strong>${escapeHtml(e.name)}</strong> • ${escapeHtml(date)}</div>
+            <div>${escapeHtml(e.message)}</div>
+          </div>
+        `;
+      }).join("");
+
+      setStatus("Loaded");
+    }
+
+    document.getElementById("form").addEventListener("submit", async (ev) => {
+      ev.preventDefault();
+      const name = document.getElementById("name").value.trim();
+      const message = document.getElementById("message").value.trim();
+      if (!name || !message) return;
+
+      setStatus("Posting...");
+      const res = await fetch(`${API}/entries`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, message })
+      });
+
+      if (!res.ok) {
+        const err = await res.text();
+        setStatus("Error: " + err);
+        return;
+      }
+
+      document.getElementById("message").value = "";
+      await loadEntries();
+      setStatus("Posted ✅");
+    });
+
+    document.getElementById("refresh").addEventListener("click", loadEntries);
+
+    loadEntries();
+  </script>
+  </body>
+</html>
