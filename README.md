@@ -25,8 +25,6 @@ Some of the technologies used in this repository include:
 - Bash Scripting
 - AWS / Cloud Platforms
 
-```
-
 ## 📖 Learning Goals
 - Understand DevOps culture and workflows
 - Build automated CI/CD pipelines
