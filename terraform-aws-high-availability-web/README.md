@@ -169,3 +169,7 @@ Future improvements could include:
 # Author
 
 This project was created as part of learning **Terraform and AWS cloud infrastructure automation**.
+
+## License
+
+MIT
