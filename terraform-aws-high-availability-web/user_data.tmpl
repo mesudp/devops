@@ -1,0 +1,27 @@
+#!/bin/bash
+set -e
+
+apt update -y
+apt install -y apache2 curl
+
+systemctl enable apache2
+systemctl start apache2
+
+# IMDSv2 token
+TOKEN=$(curl -sX PUT "http://169.254.169.254/latest/api/token" \
+  -H "X-aws-ec2-metadata-token-ttl-seconds: 21600")
+
+# Public IP (if none, show N/A)
+PUBLIC_IP=$(curl -sH "X-aws-ec2-metadata-token: $TOKEN" \
+  http://169.254.169.254/latest/meta-data/public-ipv4 || echo "N/A")
+
+cat > /var/www/html/index.html <<HTML
+<!doctype html>
+<html>
+  <body style="font-family: Arial, sans-serif;">
+    <h1>Hello World</h1>
+    <p><b>Public IP:</b> <code>$PUBLIC_IP</code></p>
+    <p>Refresh to see ALB switch between EC2 instances.</p>
+  </body>
+</html>
+HTML
