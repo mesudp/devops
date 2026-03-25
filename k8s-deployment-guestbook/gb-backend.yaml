@@ -14,16 +14,22 @@ spec:
     spec:
       containers:
         - name: backend
-          image: mesudperik/guestbook-backend:1.0
+          image: mesudperik/guestbook-backend:1.1
           ports:
             - containerPort: 5000
           env:
             - name: DBHOST
               value: db
             - name: DBUSER
-              value: dbuser
+              valueFrom: 
+                secretKeyRef:
+                  name: db-secret
+                  key: user
             - name: DBPASSWORD
-              value: dbpassword
+              valueFrom: 
+                secretKeyRef:
+                  name: db-secret
+                  key: password
             - name: DBDATABASE
               value: dbname
             - name: DBPORT
